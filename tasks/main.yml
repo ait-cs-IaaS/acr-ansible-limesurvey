@@ -1,0 +1,74 @@
+---
+
+- name: Create user {{ limesurvey_user }}
+  become: true
+  ansible.builtin.user:
+    name: '{{ limesurvey_user }}'
+    home: '{{ limesurvey_basepath }}'
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Clone limesurvey docker repo
+  ansible.builtin.include_role:
+    name: ls-get-git-repo
+  vars:
+    repo_user: "{{ limesurvey_user }}"
+    repo_basepath: "{{ limesurvey_basepath }}"
+    repo_url: "{{ limesurvey_docker_repo_url }}"
+
+- name: Setup nginx webserver
+  ansible.builtin.include_role:
+    name: ls-nginx-simple-webserver
+  vars:
+    nginx_conf_src: nginx_limesurvey.conf.j2
+    nginx_conf_dest: limesurvey
+
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install docker and docker-compose
+  become: true
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+
+- name: Start and enable docker
+  become: true
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: Set LIMESURVEY environment variables
+  ansible.builtin.replace:
+    path: "{{ limesurvey_basepath }}/docker-compose.yml"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  with_items:
+    - regexp: 'LIMESURVEY_DB_PASSWORD:.*'
+      replace: 'LIMESURVEY_DB_PASSWORD: "{{ limesurvey_mysqldb_password }}"'
+    - regexp: 'LIMESURVEY_ADMIN_USER:.*'
+      replace: 'LIMESURVEY_ADMIN_USER: "{{ limesurvey_admin_user }}"'
+    - regexp: 'LIMESURVEY_ADMIN_PASSWORD:.*'
+      replace: 'LIMESURVEY_ADMIN_PASSWORD: "{{ limesurvey_admin_password }}"'
+    - regexp: 'LIMESURVEY_ADMIN_NAME:.*'
+      replace: 'LIMESURVEY_ADMIN_NAME: "{{ limesurvey_admin_name }}"'
+    - regexp: 'LIMESURVEY_ADMIN_EMAIL:.*'
+      replace: 'LIMESURVEY_ADMIN_EMAIL: "{{ limesurvey_admin_email }}"'
+    - regexp: 'TZ:.*'
+      replace: 'TZ: "{{ limesurvey_timezone }}"'
+    - regexp: 'MYSQL_ROOT_PASSWORD:.*'
+      replace: 'MYSQL_ROOT_PASSWORD: "{{ limesurvey_mysqldb_password }}"'
+    
+- name: Serve via systemd service
+  ansible.builtin.include_role:
+    name: ls-simple-systemd-service
+  vars:
+    app_name: limesurvey
+    app_user: root
+    app_basepath: "{{ limesurvey_basepath }}"
+    app_service_execstart: "{{ limesurvey_service_execstart }}"
