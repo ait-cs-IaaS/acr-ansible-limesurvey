@@ -2,14 +2,14 @@
 - src: https://github.com/ait-cs-IaaS/acr-ansible-nginx-simple-webserver.git
   scm: git
   version: v1.0
-  name: ls-nginx-simple-webserver
+  name: limesurvey-nginx-simple-webserver
  
 - src: https://github.com/ait-cs-IaaS/acr-ansible-get-git-repo.git
   scm: git
   version: v1.0
-  name: ls-get-git-repo
+  name: limesurvey-get-git-repo
 
 - src: https://github.com/ait-cs-IaaS/acr-ansible-simple-systemd-service.git
   scm: git
   version: v1.0
-  name: ls-simple-systemd-service
+  name: limesurvey-simple-systemd-service

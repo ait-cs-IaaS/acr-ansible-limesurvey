@@ -10,7 +10,7 @@
 
 - name: Clone limesurvey docker repo
   ansible.builtin.include_role:
-    name: ls-get-git-repo
+    name: limesurvey-get-git-repo
   vars:
     repo_user: "{{ limesurvey_user }}"
     repo_basepath: "{{ limesurvey_basepath }}"
@@ -18,7 +18,7 @@
 
 - name: Setup nginx webserver
   ansible.builtin.include_role:
-    name: ls-nginx-simple-webserver
+    name: limesurvey-nginx-simple-webserver
   vars:
     nginx_conf_src: nginx_limesurvey.conf.j2
     nginx_conf_dest: limesurvey
@@ -66,7 +66,7 @@
     
 - name: Serve via systemd service
   ansible.builtin.include_role:
-    name: ls-simple-systemd-service
+    name: limesurvey-simple-systemd-service
   vars:
     app_name: limesurvey
     app_user: root
